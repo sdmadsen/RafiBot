@@ -3,26 +3,23 @@ import MySQLdb as mdb
 import time
 import datetime
 
-class ApTrackingModule(IrcModule):
 
-  def defineResponses(self):
-    self.respondToRegex('(track ap start)', self.ap_start_response)
-    self.respondToRegex('(track ap stop)', self.ap_stop_response)
-    self.respondToRegex('(track ap stats)', self.ap_stats_response)
-
-  def ap_start_response(self, message, **extra_args):
+@respondtoregex('(track ap start)')
+def ap_start_response(message, **extra_args):
     """Start tracking an AP and return a confirmation message."""
-    returnMessage = startTrackingApForNick(self.ircBot.databaseConnection(), message.sendingNick)
+    returnMessage = startTrackingApForNick(IrcBot.shared_instance().databaseConnection(), message.sendingNick)
     return message.newResponseMessage(returnMessage)
 
-  def ap_stop_response(self, message, **extra_args):
+@respondtoregex('(track ap stop)')
+def ap_stop_response(message, **extra_args):
     """Stop track the last started AP and return a confirmation message."""
-    returnMessage = stopTrackingApForNick(self.ircBot.databaseConnection(), message.sendingNick)
+    returnMessage = stopTrackingApForNick(IrcBot.shared_instance().databaseConnection(), message.sendingNick)
     return message.newResponseMessage(returnMessage)
 
-  def ap_stats_response(self, message, **extra_args):
+@respondtoregex('(track ap stats)')
+def ap_stats_response(message, **extra_args):
     """Gather stats on the all APs and return them"""
-    returnMessage = getApStatsForNick(self.ircBot.databaseConnection(), message.sendingNick)
+    returnMessage = getApStatsForNick(IrcBot.shared_instance().databaseConnection(), message.sendingNick)
     return message.newResponseMessage(returnMessage)
 
 
@@ -35,7 +32,7 @@ class ApTrackingModule(IrcModule):
 #(out) The message to print to the room
 def startTrackingApForNick(aDatabaseConnection, aMessageNick):
   cursor = aDatabaseConnection.cursor()
-  
+
   #Get the UserId for this nick
   cursor.execute("SELECT userId FROM rafiBot.Nicks WHERE nick = %s", (aMessageNick))
   if cursor.rowcount == 0:
@@ -119,7 +116,7 @@ def getApStatsForNick(aDatabaseConnection, aMessageNick):
     duration = time.time() - startTime
 
     statMessage += 'You have been drinking your current AP for ' + str(datetime.timedelta(seconds = duration)) + '.'
-  
+
   #If there are no stats report that
   if statMessage == '':
     statMessage = 'Nothing to report'
